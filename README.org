@@ -1,3 +1,6 @@
 * Advent of Code 2018
 ** Day 1: Shell script
 ** Day 2: Io
+** Day 3: HTML5 Canvas
+  - Part 1 renders rectangles with an alpha value where when it renders twice or more, the alpha value gets saturated to 255. Counting pixels with alpha 255 returns the answer.
+  - Part 2 renders rectangles whose colors are Claim IDs converted into a 11-based number system where each digit gets encoded as a R/G/B value, so it can be distinguishably different in value after gamma correction/smoothing/rounding error/etc done by the browser. Finding the claim ID where the box doesn't contain the saturated alpha value of 255 returns the answer.

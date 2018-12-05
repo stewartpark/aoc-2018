@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Day 3</title>
+    <style type="text/css">
+     canvas {
+       position: absolute;
+       top: 0px;
+       left: 0px;
+       opacity: 1.0;
+     }
+    </style>
+  </head>
+  <body>
+    <canvas id="c1"></canvas>
+    <canvas id="c2"></canvas>
+    <script type="text/javascript">
+     var ctx1 = document.getElementById('c1').getContext('2d');
+     var ctx2 = document.getElementById('c2').getContext('2d');
+
+     ctx1.canvas.width = ctx2.canvas.width = 1024;
+     ctx1.canvas.height = ctx2.canvas.height = 1024;
+     ctx1.fillStyle = 'rgba(0, 100, 0, 0.99)';
+
+     fetch('in/day3.txt')
+       .then(function(data) { return data.text(); })
+       .then(function(data) {
+         var parsed = data
+           .split('\n')
+           .map(function(line) {
+             var matched = line.match(/^#([0-9]+) @ ([0-9]+),([0-9]+): ([0-9]+)x([0-9]+)$/);
+             if (!matched) { return null; }
+
+             return {
+               id: parseInt(matched[1]),
+               x:  parseInt(matched[2]),
+               y:  parseInt(matched[3]),
+               w:  parseInt(matched[4]),
+               h:  parseInt(matched[5]),
+             };
+           })
+           .filter(function(rect) { return rect !== null; });
+
+         parsed.forEach(function(rect) {
+           var id_s = rect.id.toString(11).padStart(3, '0');
+           var id_r = parseInt(id_s[0], 11) * 15 + 50;
+           var id_g = parseInt(id_s[1], 11) * 15 + 50;
+           var id_b = parseInt(id_s[2], 11) * 15 + 50;
+
+           ctx1.fillRect(rect.x, rect.y, rect.w, rect.h);
+           ctx2.fillStyle = 'rgb(' + id_r +', ' + id_g + ', ' + id_b + ')';
+           ctx2.fillRect(rect.x, rect.y, rect.w, rect.h);
+         });
+
+         var collisionMap = ctx1.getImageData(0, 0, 1024, 1024).data;
+         var idEncodedMap = ctx2.getImageData(0, 0, 1024, 1024).data;
+         var saturatedAlphaCount = 0;
+         var collision = {};
+         for(var i = 0; i < collisionMap.length; i += 4) {
+           var alpha = collisionMap[i + 3];
+           var id = Math.round((idEncodedMap[i + 0] - 50.0) / 15.0) * 121 +
+                    Math.round((idEncodedMap[i + 1] - 50.0) / 15.0) * 11 +
+                    Math.round((idEncodedMap[i + 2] - 50.0) / 15.0) * 1;
+
+           if (id <= 0) { continue; }
+
+           if (alpha === 255) { saturatedAlphaCount++; }
+
+           if (collision[id] === undefined) {
+             collision[id] = false;
+
+             var rect = parsed[id - 1];
+             var localCollisionMap = ctx1.getImageData(rect.x, rect.y, rect.w, rect.h).data;
+             for(var j = 3; j < localCollisionMap.length; j += 4) {
+               if (localCollisionMap[j] === 255) {
+                 collision[id] = true;
+                 break;
+               }
+             }
+           }
+         }
+
+         console.log('Part 1:', saturatedAlphaCount);
+         console.log('Part 2:', Object.keys(collision).filter(function(k) { return collision[k] === false; }));
+       });
+    </script>
+  </body>
+</html>
